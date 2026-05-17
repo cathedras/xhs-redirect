@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试小红书短链跳转</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        h1 { color: #ff2442; margin-bottom: 10px; }
+        .subtitle { color: #999; margin-bottom: 30px; }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #ff2442;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #ff2442, #ff6b7a);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            display: none;
+        }
+        .result.active { display: block; }
+        .result-title { font-weight: 600; margin-bottom: 10px; }
+        .result-url { 
+            word-break: break-all; 
+            color: #666;
+            font-size: 13px;
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #eee;
+        }
+        .quick-links {
+            margin-top: 20px;
+        }
+        .quick-links a {
+            display: block;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #fff5f5;
+            border-radius: 6px;
+            color: #ff2442;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .quick-links a:hover {
+            background: #ffe5e5;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <h1>📕 小红书短链跳转测试</h1>
+        <p class="subtitle">输入小红书短链，生成跳转链接</p>
+        
+        <div class="input-group">
+            <label>小红书短链：</label>
+            <input type="text" id="xhsUrl" placeholder="https://xhslink.com/m/AZybE6hgByh" 
+                   value="https://xhslink.com/m/AZybE6hgByh">
+        </div>
+        
+        <button class="btn" onclick="generateLink()">生成跳转链接</button>
+        
+        <div class="result" id="result">
+            <div class="result-title">生成的链接：</div>
+            <div class="result-url" id="resultUrl"></div>
+            <div style="margin-top: 15px;">
+                <a class="btn" id="testLink" href="#" target="_blank">测试访问</a>
+            </div>
+        </div>
+        
+        <div class="quick-links">
+            <div class="result-title">快速测试：</div>
+            <a href="http://localhost:3000/redirect?param=https://xhslink.com/m/AZybE6hgByh" target="_blank">
+                测试链接 1：默认示例
+            </a>
+            <a href="http://localhost:3000/api/resolve?url=https://xhslink.com/m/AZybE6hgByh" target="_blank">
+                API 测试：解析短链
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        function generateLink() {
+            const xhsUrl = document.getElementById('xhsUrl').value.trim();
+            if (!xhsUrl) {
+                alert('请输入小红书短链');
+                return;
+            }
+            
+            const redirectUrl = `http://localhost:3000/redirect?param=${encodeURIComponent(xhsUrl)}`;
+            
+            document.getElementById('resultUrl').textContent = redirectUrl;
+            document.getElementById('testLink').href = redirectUrl;
+            document.getElementById('result').classList.add('active');
+        }
+        
+        // 页面加载时自动生成
+        window.onload = generateLink;
+    </script>
+</body>
+</html>

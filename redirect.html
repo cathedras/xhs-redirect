@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>打开小红书</title>
+    <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px 30px;
+            text-align: center;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .xhs-icon {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, #ff2442, #ff6b7a);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 32px;
+            box-shadow: 0 4px 12px rgba(255,36,66,0.3);
+        }
+        h1 { font-size: 20px; color: #333; margin-bottom: 8px; }
+        .subtitle { color: #999; font-size: 14px; margin-bottom: 32px; }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #ff2442, #ff6b7a);
+            color: white;
+        }
+        .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+        .tips {
+            margin-top: 24px;
+            padding: 12px 16px;
+            background: #fff8f8;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #888;
+            line-height: 1.6;
+        }
+        .url-display {
+            margin: 16px 0;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #666;
+            word-break: break-all;
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="xhs-icon">📕</div>
+        <h1>小红书</h1>
+        <p class="subtitle">发现美好生活</p>
+        
+        <div class="url-display" id="urlDisplay"></div>
+        
+        <button class="btn btn-primary" id="btnOpen" onclick="handleOpen()">
+            打开小红书
+        </button>
+        
+        <button class="btn btn-secondary hidden" id="btnCopy" onclick="copyLink()">
+            复制链接
+        </button>
+        
+        <div class="tips">
+            <div id="tipsText">点击按钮打开小红书 APP</div>
+        </div>
+    </div>
+
+    <script>
+        // 获取 URL 参数
+        function getParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
+        
+        // 判断是否在 微信内
+        function isWechat() {
+            return /MicroMessenger/i.test(navigator.userAgent);
+        }
+        
+        // 判断是否在 小红书 APP 内
+        function isXiaohongshu() {
+            return /xhs/i.test(navigator.userAgent) || /xiaohongshu/i.test(navigator.userAgent);
+        }
+        
+        // 获取参数
+        const paramUrl = getParam('param');
+        const urlDisplay = document.getElementById('urlDisplay');
+        const tipsText = document.getElementById('tipsText');
+        
+        // 显示目标链接
+        if (paramUrl) {
+            urlDisplay.textContent = decodeURIComponent(paramUrl);
+        } else {
+            urlDisplay.textContent = '未提供链接参数';
+            urlDisplay.style.color = '#ff2442';
+        }
+        
+        // 处理打开逻辑
+        function handleOpen() {
+            if (!paramUrl) {
+                alert('请提供有效的链接参数');
+                return;
+            }
+            
+            // 如果在微信内，尝试跳转小程序
+            if (isWechat()) {
+                tipsText.textContent = '正在唤起小红书小程序...';
+                
+                // 使用微信 JS-SDK 跳转小程序
+                if (typeof wx !== 'undefined') {
+                    wx.miniProgram.navigateTo({
+                        url: '/pages/index/index?url=' + encodeURIComponent(paramUrl),
+                        success: function() {
+                            console.log('跳转成功');
+                        },
+                        fail: function() {
+                            // 如果小程序跳转失败，尝试直接打开链接
+                            window.location.href = paramUrl;
+                        }
+                    });
+                } else {
+                    // 没有微信 JS-SDK，直接跳转
+                    window.location.href = paramUrl;
+                }
+            } 
+            // 如果在小红书 APP 内
+            else if (isXiaohongshu()) {
+                window.location.href = paramUrl;
+            }
+            // 其他浏览器
+            else {
+                // 尝试打开小红书 APP
+                window.location.href = 'xhs://';
+                
+                // 延迟后跳转原链接
+                setTimeout(() => {
+                    window.location.href = paramUrl;
+                }, 2000);
+            }
+        }
+        
+        // 复制链接
+        function copyLink() {
+            if (paramUrl) {
+                navigator.clipboard.writeText(paramUrl).then(() => {
+                    alert('链接已复制到剪贴板');
+                });
+            }
+        }
+        
+        // 根据环境调整 UI
+        if (isWechat()) {
+            tipsText.textContent = '在微信内点击将尝试打开小红书小程序';
+        } else if (!isXiaohongshu()) {
+            document.getElementById('btnCopy').classList.remove('hidden');
+            tipsText.innerHTML = '未安装小红书？<br>可以复制链接到小红书 APP 打开';
+        }
+    </script>
+</body>
+</html>

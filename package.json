@@ -1,0 +1,16 @@
+{
+  "name": "xhs-redirect-service",
+  "version": "1.0.0",
+  "description": "小红书短链跳转服务",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
