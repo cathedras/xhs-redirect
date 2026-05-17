@@ -2,197 +2,344 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>打开小红书</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xhs-redirect 入口页</title>
     <style>
+        :root {
+            color-scheme: light;
+            --bg: #fff7f4;
+            --bg-2: #fff1ee;
+            --surface: rgba(255, 255, 255, 0.9);
+            --surface-strong: #ffffff;
+            --text: #241a1d;
+            --muted: #6f5e63;
+            --primary: #ff2442;
+            --primary-soft: rgba(255, 36, 66, 0.1);
+            --border: rgba(36, 26, 29, 0.08);
+            --shadow: 0 20px 50px rgba(255, 36, 66, 0.14);
+        }
+
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
-        
+
+        html, body {
+            margin: 0;
+            min-height: 100%;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #ff2442 0%, #ff6b7a 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(255, 36, 66, 0.18), transparent 34%),
+                radial-gradient(circle at top right, rgba(255, 160, 179, 0.32), transparent 26%),
+                linear-gradient(180deg, var(--bg), var(--bg-2));
             min-height: 100vh;
+            padding: 32px 16px 40px;
+        }
+
+        .page {
+            width: min(1120px, 100%);
+            margin: 0 auto;
+        }
+
+        .hero {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding: 28px;
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            background: linear-gradient(180deg, var(--surface), rgba(255, 255, 255, 0.72));
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            width: fit-content;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: var(--primary-soft);
+            color: var(--primary);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .brand-mark {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #ff2442, #ff7b8c);
+            color: white;
+            font-size: 18px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(28px, 5vw, 48px);
+            line-height: 1.06;
+            letter-spacing: -0.04em;
+        }
+
+        .subtitle {
+            margin: 0;
+            max-width: 56ch;
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .pill {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .section-title {
+            margin: 28px 0 14px;
+            font-size: 18px;
+            line-height: 1.2;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+
+        .card {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            gap: 14px;
             padding: 20px;
+            border-radius: 22px;
+            border: 1px solid var(--border);
+            background: var(--surface-strong);
+            box-shadow: 0 14px 32px rgba(36, 26, 29, 0.06);
+            text-decoration: none;
+            color: inherit;
+            transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
         }
-        
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px 30px;
-            text-align: center;
-            max-width: 360px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 40px rgba(36, 26, 29, 0.1);
+            border-color: rgba(255, 36, 66, 0.2);
         }
-        
-        .logo {
-            width: 80px;
-            height: 80px;
-            background: #ff2442;
-            border-radius: 20px;
+
+        .card-top {
             display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, rgba(255, 36, 66, 0.16), rgba(255, 123, 140, 0.22));
+            font-size: 22px;
+        }
+
+        .card h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .route {
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: #f8f4f5;
+            border: 1px solid var(--border);
+            color: #5f4d52;
+            font-size: 13px;
+            word-break: break-all;
+        }
+
+        .button {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 36px;
-        }
-        
-        h1 {
-            font-size: 22px;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .desc {
-            color: #999;
-            font-size: 14px;
-            margin-bottom: 30px;
-        }
-        
-        .btn-open {
-            display: block;
-            width: 100%;
-            padding: 16px;
-            background: #ff2442;
+            gap: 8px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #ff2442, #ff6f80);
             color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
+            font-weight: 700;
             text-decoration: none;
         }
-        
-        .btn-open:active {
-            transform: scale(0.96);
-            opacity: 0.9;
+
+        .button.secondary {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
         }
-        
-        .tips {
-            margin-top: 20px;
-            padding: 12px;
-            background: #fff5f5;
-            border-radius: 8px;
-            font-size: 12px;
-            color: #666;
-            line-height: 1.6;
+
+        .footer {
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
         }
-        
-        .loading {
-            display: none;
-        }
-        
-        .loading.active {
-            display: block;
-        }
-        
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #ff2442;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .error {
-            display: none;
-            color: #ff2442;
-            font-size: 14px;
-            margin-top: 15px;
-        }
-        
-        .error.active {
-            display: block;
+
+        @media (max-width: 640px) {
+            body {
+                padding: 16px 12px 28px;
+            }
+
+            .hero {
+                padding: 22px;
+                border-radius: 22px;
+            }
+
+            .card {
+                padding: 18px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">📕</div>
-        <h1>打开小红书</h1>
-        <p class="desc">即将跳转到小红书小程序</p>
-        
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>正在跳转...</p>
-        </div>
-        
-        <button class="btn-open" id="btnOpen" onclick="openXiaohongshu()">
-            打开小红书
-        </button>
-        
-        <div class="error" id="error">
-            链接参数错误，请检查 URL
-        </div>
-        
-        <div class="tips">
-            💡 如果无法打开，请确保已安装小红书 APP
-        </div>
-    </div>
+    <main class="page">
+        <section class="hero">
+            <div class="brand">
+                <span class="brand-mark">📕</span>
+                <span>xhs-redirect</span>
+            </div>
+            <div>
+                <h1>页面访问链接页</h1>
+                <p class="subtitle">把这个项目里常用的页面集中在一个入口，方便直接打开跳转页、二维码工具、Logo 上传页和微信小程序跳转页。</p>
+            </div>
+            <div class="meta">
+                <span class="pill">本页：/</span>
+                <span class="pill">服务端口：3000</span>
+                <span class="pill">适合手机和桌面访问</span>
+            </div>
+        </section>
 
-    <script>
-        // 解析 URL 参数
-        function getParam(name) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(name);
-        }
-        
-        // 小红书小程序信息
-        const XHS_APPID = 'wx9ef99641f13b2e9d';
-        
-        // 获取 param 参数
-        const paramUrl = getParam('param');
-        
-        // 验证参数
-        if (!paramUrl) {
-            document.getElementById('error').classList.add('active');
-            document.getElementById('btnOpen').style.display = 'none';
-        }
-        
-        function openXiaohongshu() {
-            const loading = document.getElementById('loading');
-            const btn = document.getElementById('btnOpen');
-            
-            loading.classList.add('active');
-            btn.style.display = 'none';
-            
-            // 方案 1: 尝试通过 URL Scheme 打开小红书 APP
-            // 小红书 URL Scheme: xhs://
-            window.location.href = 'xhs://';
-            
-            // 方案 2: 如果 Scheme 失败，尝试跳转到原始链接
-            setTimeout(() => {
-                if (paramUrl) {
-                    // 跳转到小红书短链
-                    window.location.href = paramUrl;
-                }
-            }, 1500);
-            
-            // 方案 3: 尝试微信小程序跳转（如果在微信内）
-            if (typeof wx !== 'undefined') {
-                wx.miniProgram.navigateTo({
-                    url: '/pages/index/index'
-                });
-            }
-        }
-        
-        // 自动尝试打开（可选）
-        // setTimeout(openXiaohongshu, 1000);
-    </script>
+        <h2 class="section-title">常用页面</h2>
+        <section class="grid">
+            <a class="card" href="/redirect?param=https%3A%2F%2Fxhslink.com%2Fm%2FAZybE6hgByh">
+                <div class="card-top">
+                    <div>
+                        <h2>小红书跳转页</h2>
+                        <p>输入 param 参数后，打开后会尝试唤起小红书 APP，并在失败时回退到原始链接。</p>
+                    </div>
+                    <div class="card-icon">↗</div>
+                </div>
+                <div class="route">/redirect?param=https%3A%2F%2Fxhslink.com%2Fm%2FAZybE6hgByh</div>
+                <span class="button">打开页面</span>
+            </a>
+
+            <a class="card" href="/qr">
+                <div class="card-top">
+                    <div>
+                        <h2>二维码生成页</h2>
+                        <p>生成本站可用的二维码内容，适合把短链或跳转链接变成二维码。</p>
+                    </div>
+                    <div class="card-icon">QR</div>
+                </div>
+                <div class="route">/qr</div>
+                <span class="button">打开页面</span>
+            </a>
+
+            <a class="card" href="/scan">
+                <div class="card-top">
+                    <div>
+                        <h2>二维码扫描页</h2>
+                        <p>上传二维码图片，识别内容并生成可直接使用的跳转链接。</p>
+                    </div>
+                    <div class="card-icon">⎙</div>
+                </div>
+                <div class="route">/scan</div>
+                <span class="button">打开页面</span>
+            </a>
+
+            <a class="card" href="/logo">
+                <div class="card-top">
+                    <div>
+                        <h2>Logo 上传页</h2>
+                        <p>上传或填写 Logo 地址，给后续展示页面统一使用。</p>
+                    </div>
+                    <div class="card-icon">◎</div>
+                </div>
+                <div class="route">/logo</div>
+                <span class="button">打开页面</span>
+            </a>
+
+            <a class="card" href="/weapp">
+                <div class="card-top">
+                    <div>
+                        <h2>微信小程序跳转页</h2>
+                        <p>用于微信环境下的小程序跳转和相关提示。</p>
+                    </div>
+                    <div class="card-icon">We</div>
+                </div>
+                <div class="route">/weapp</div>
+                <span class="button">打开页面</span>
+            </a>
+
+            <a class="card" href="/api/resolve?url=https%3A%2F%2Fxhslink.com%2Fm%2FAZybE6hgByh">
+                <div class="card-top">
+                    <div>
+                        <h2>短链解析接口</h2>
+                        <p>返回短链最终跳转地址，适合调试或对接其他页面。</p>
+                    </div>
+                    <div class="card-icon">API</div>
+                </div>
+                <div class="route">/api/resolve?url=https%3A%2F%2Fxhslink.com%2Fm%2FAZybE6hgByh</div>
+                <span class="button">打开接口</span>
+            </a>
+        </section>
+
+        <h2 class="section-title">说明</h2>
+        <section class="grid">
+            <div class="card" style="cursor: default;">
+                <div class="card-top">
+                    <div>
+                        <h2>快速入口</h2>
+                        <p>如果你只想看默认跳转页，直接打开上面的跳转页即可。</p>
+                    </div>
+                    <div class="card-icon">★</div>
+                </div>
+                <a class="button secondary" href="/redirect?param=https%3A%2F%2Fxhslink.com%2Fm%2FAZybE6hgByh">跳转页示例</a>
+            </div>
+
+            <div class="card" style="cursor: default;">
+                <div class="card-top">
+                    <div>
+                        <h2>页面清单</h2>
+                        <p>这个入口页只负责做导航，不再承担跳转逻辑，便于维护和分享。</p>
+                    </div>
+                    <div class="card-icon">i</div>
+                </div>
+                <div class="footer">如后续新增页面，只需要继续往这里补一个卡片链接即可。</div>
+            </div>
+        </section>
+    </main>
 </body>
 </html>
