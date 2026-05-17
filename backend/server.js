@@ -6,8 +6,23 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const frontendDistPath = path.join(__dirname, '../frontend/dist');
 const frontendIndexPath = path.join(frontendDistPath, 'index.html');
-const qrDataFilePath = path.join(__dirname, '../qrcodecont.json');
 const os = require('os');
+
+// Data directory for QR content. Can be overridden by QR_DATA_DIR env.
+const defaultDataDir = process.env.QR_DATA_DIR || path.join(__dirname, '../data');
+try {
+  if (!fs.existsSync(defaultDataDir)) {
+    fs.mkdirSync(defaultDataDir, { recursive: true });
+  }
+} catch (e) {
+  console.warn('无法创建数据目录', defaultDataDir, e && e.message);
+}
+
+const defaultQrPath = path.join(defaultDataDir, 'qrcodecont.json');
+const qrDataFilePath = process.env.QR_DATA_PATH || defaultQrPath;
+
+// Serve data directory as static under /data
+app.use('/data', express.static(defaultDataDir));
 
 app.use(express.json());
 app.set('trust proxy', true);
