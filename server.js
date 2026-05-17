@@ -23,6 +23,16 @@ app.get('/qr', (req, res) => {
     res.sendFile(path.join(__dirname, 'qr-generator.html'));
 });
 
+// 二维码扫描页面
+app.get('/scan', (req, res) => {
+    res.sendFile(path.join(__dirname, 'qr-scan.html'));
+});
+
+// Logo 上传页面
+app.get('/logo', (req, res) => {
+    res.sendFile(path.join(__dirname, 'logo-upload.html'));
+});
+
 // 微信小程序跳转页面
 app.get('/weapp', (req, res) => {
     res.sendFile(path.join(__dirname, 'weapp-redirect.html'));

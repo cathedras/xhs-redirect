@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>二维码扫描器</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: linear-gradient(135deg, #ff2442 0%, #ff6b7a 100%);
+            --card: rgba(255,255,255,0.98);
+            --text: #1f2937;
+            --muted: #6b7280;
+            --line: #eef0f4;
+            --brand: #ff2442;
+            --brand-2: #ff6b7a;
+            --shadow: 0 24px 80px rgba(0,0,0,0.18);
+        }
+        body {
+            min-height: 100vh;
+            padding: 24px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .shell {
+            width: 100%;
+            max-width: 1040px;
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 20px;
+        }
+        .panel {
+            background: var(--card);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .hero {
+            padding: 34px;
+            background: radial-gradient(circle at top left, rgba(255,255,255,0.25), transparent 36%), linear-gradient(135deg, #ff2442 0%, #ff6b7a 100%);
+            color: white;
+        }
+        .hero h1 {
+            font-size: 34px;
+            line-height: 1.1;
+            margin-bottom: 12px;
+        }
+        .hero p {
+            max-width: 42rem;
+            font-size: 15px;
+            line-height: 1.8;
+            color: rgba(255,255,255,0.92);
+        }
+        .content {
+            padding: 28px 34px 34px;
+        }
+        .field {
+            margin-bottom: 18px;
+        }
+        .label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .upload-box {
+            border: 1.5px dashed #d7dbe3;
+            border-radius: 18px;
+            padding: 18px;
+            background: #fbfcfe;
+        }
+        .file-input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .upload-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            min-height: 48px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: white;
+            border: 1px solid var(--line);
+            color: var(--text);
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .upload-btn:hover {
+            border-color: rgba(255,36,66,0.35);
+            transform: translateY(-1px);
+        }
+        .drop-hint {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .preview {
+            margin-top: 16px;
+            display: none;
+        }
+        .preview.active {
+            display: block;
+        }
+        .preview-card {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 14px;
+            align-items: center;
+            padding: 14px;
+            border-radius: 16px;
+            background: white;
+            border: 1px solid var(--line);
+        }
+        .preview-card img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 14px;
+            background: #f3f4f6;
+        }
+        .meta h2 {
+            font-size: 16px;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        .meta p {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.6;
+            word-break: break-all;
+        }
+        .actions {
+            display: grid;
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 48px;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s;
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--brand), var(--brand-2));
+            color: white;
+            box-shadow: 0 12px 24px rgba(255,36,66,0.22);
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: var(--text);
+        }
+        .btn-ghost {
+            background: transparent;
+            color: #6b7280;
+            border: 1px solid var(--line);
+        }
+        .result-block {
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 18px;
+            background: #fafafa;
+            border: 1px solid var(--line);
+        }
+        .result-block.active {
+            background: white;
+        }
+        .result-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        .result-text {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.75;
+            word-break: break-all;
+        }
+        .result-text strong {
+            color: var(--text);
+        }
+        .qr-result {
+            margin-top: 16px;
+            display: none;
+        }
+        .qr-result.active {
+            display: block;
+        }
+        .qr-canvas-wrap {
+            display: inline-block;
+            padding: 18px;
+            border-radius: 18px;
+            background: white;
+            border: 1px solid var(--line);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        }
+        .qr-canvas-wrap #qrcode {
+            display: inline-block;
+        }
+        .tip-panel {
+            padding: 34px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .tip-card {
+            padding: 20px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.16);
+            backdrop-filter: blur(16px);
+        }
+        .tip-card h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .tip-card p {
+            font-size: 14px;
+            line-height: 1.8;
+            color: rgba(255,255,255,0.92);
+        }
+        .links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.24);
+            background: rgba(255,255,255,0.08);
+        }
+        .hidden-canvas {
+            display: none;
+        }
+        .error {
+            display: none;
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: #fff1f2;
+            color: #be123c;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .error.active {
+            display: block;
+        }
+        @media (max-width: 920px) {
+            body { padding: 16px; }
+            .shell { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <section class="panel">
+            <div class="hero">
+                <h1>上传二维码，自动生成本站参数</h1>
+                <p>选择一张二维码图片后，页面会直接识别二维码内容，并自动拼出本站可用的跳转链接：<strong>/redirect?param=...</strong>。如果二维码本身是一个小红书短链，也可以直接拿来生成跳转参数。</p>
+            </div>
+
+            <div class="content">
+                <div class="field">
+                    <label class="label" for="qrFile">上传二维码图片</label>
+                    <div class="upload-box">
+                        <input class="file-input" id="qrFile" type="file" accept="image/*">
+                        <label class="upload-btn" for="qrFile">📷 选择二维码图片</label>
+                        <div class="drop-hint">建议上传清晰、正方形、无遮挡的二维码图片，识别成功率更高。</div>
+
+                        <div class="preview" id="imagePreviewWrap">
+                            <div class="preview-card">
+                                <img id="imagePreview" alt="二维码图片预览">
+                                <div class="meta">
+                                    <h2>图片预览</h2>
+                                    <p id="imagePreviewText">尚未选择图片</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-primary" id="btnScan" type="button">识别二维码并生成本站参数</button>
+                    <button class="btn btn-secondary" id="btnCopyLink" type="button" disabled>复制本站链接</button>
+                    <button class="btn btn-ghost" id="btnReset" type="button">重新上传</button>
+                </div>
+
+                <div class="error" id="errorBox"></div>
+
+                <div class="result-block" id="decodedBlock">
+                    <div class="result-title">识别结果</div>
+                    <div class="result-text" id="decodedText">等待上传二维码图片。</div>
+                </div>
+
+                <div class="result-block" id="linkBlock">
+                    <div class="result-title">本站跳转参数</div>
+                    <div class="result-text" id="siteLinkText">识别成功后，这里会显示 /redirect?param=... 的链接。</div>
+                </div>
+
+                <div class="qr-result" id="qrResult">
+                    <div class="result-title">本站参数二维码</div>
+                    <div class="qr-canvas-wrap">
+                        <div id="qrcode"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="panel tip-panel">
+            <div class="tip-card">
+                <h3>它会做什么</h3>
+                <p>1. 你上传一个二维码图片。<br>2. 页面识别出二维码里的原始内容。<br>3. 自动生成本站可直接使用的跳转参数链接。<br>4. 同时生成这个参数链接对应的二维码，方便再次分享。</p>
+            </div>
+            <div class="tip-card">
+                <h3>推荐结果</h3>
+                <p>如果识别到的是普通 URL，我会直接编码进 <strong>/redirect?param=</strong>。这样你拿到的就是本站统一格式，后面可以继续复用这个链接。</p>
+            </div>
+            <div class="links">
+                <a href="/redirect">跳转页</a>
+                <a href="/logo">Logo 页</a>
+                <a href="/qr">二维码生成页</a>
+            </div>
+        </aside>
+    </div>
+
+    <canvas id="analysisCanvas" class="hidden-canvas"></canvas>
+
+    <script>
+        const qrFile = document.getElementById('qrFile');
+        const imagePreview = document.getElementById('imagePreview');
+        const imagePreviewWrap = document.getElementById('imagePreviewWrap');
+        const imagePreviewText = document.getElementById('imagePreviewText');
+        const errorBox = document.getElementById('errorBox');
+        const decodedText = document.getElementById('decodedText');
+        const siteLinkText = document.getElementById('siteLinkText');
+        const qrResult = document.getElementById('qrResult');
+        const btnScan = document.getElementById('btnScan');
+        const btnCopyLink = document.getElementById('btnCopyLink');
+        const btnReset = document.getElementById('btnReset');
+        const analysisCanvas = document.getElementById('analysisCanvas');
+
+        let previewSource = '';
+        let decodedPayload = '';
+        let generatedSiteLink = '';
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function setError(message) {
+            if (!message) {
+                errorBox.textContent = '';
+                errorBox.classList.remove('active');
+                return;
+            }
+            errorBox.textContent = message;
+            errorBox.classList.add('active');
+        }
+
+        function resetResult() {
+            decodedPayload = '';
+            generatedSiteLink = '';
+            decodedText.textContent = '等待上传二维码图片。';
+            siteLinkText.textContent = '识别成功后，这里会显示 /redirect?param=... 的链接。';
+            btnCopyLink.disabled = true;
+            qrResult.classList.remove('active');
+            document.getElementById('qrcode').innerHTML = '';
+        }
+
+        function clearAll() {
+            previewSource = '';
+            qrFile.value = '';
+            imagePreview.removeAttribute('src');
+            imagePreviewWrap.classList.remove('active');
+            imagePreviewText.textContent = '尚未选择图片';
+            setError('');
+            resetResult();
+        }
+
+        function buildSiteLink(payload) {
+            return window.location.origin + '/redirect?param=' + encodeURIComponent(payload);
+        }
+
+        function renderSiteQr(link) {
+            const qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.innerHTML = '';
+            new QRCode(qrcodeDiv, {
+                text: link,
+                width: 220,
+                height: 220,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            qrResult.classList.add('active');
+        }
+
+        async function decodeQrFromImage(source) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = function() {
+                    const maxEdge = 1600;
+                    const scale = Math.min(1, maxEdge / Math.max(img.width, img.height));
+                    const canvasWidth = Math.max(1, Math.round(img.width * scale));
+                    const canvasHeight = Math.max(1, Math.round(img.height * scale));
+
+                    analysisCanvas.width = canvasWidth;
+                    analysisCanvas.height = canvasHeight;
+
+                    const context = analysisCanvas.getContext('2d', { willReadFrequently: true });
+                    context.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+
+                    const imageData = context.getImageData(0, 0, canvasWidth, canvasHeight);
+                    const result = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: 'attemptBoth'
+                    });
+
+                    if (!result || !result.data) {
+                        reject(new Error('未识别到二维码内容，请换一张更清晰的图片。'));
+                        return;
+                    }
+
+                    resolve(result.data);
+                };
+                img.onerror = function() {
+                    reject(new Error('图片加载失败，请重新选择文件。'));
+                };
+                img.src = source;
+            });
+        }
+
+        qrFile.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            setError('');
+            resetResult();
+
+            const reader = new FileReader();
+            reader.onload = function(loadEvent) {
+                previewSource = loadEvent.target.result;
+                imagePreview.src = previewSource;
+                imagePreviewWrap.classList.add('active');
+                imagePreviewText.textContent = file.name + ' · ' + Math.round(file.size / 1024) + ' KB';
+                decodedText.textContent = '图片已加载，点击“识别二维码并生成本站参数”。';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        btnScan.addEventListener('click', async function() {
+            if (!previewSource) {
+                setError('请先上传二维码图片。');
+                return;
+            }
+
+            btnScan.disabled = true;
+            btnScan.textContent = '识别中...';
+            setError('');
+
+            try {
+                const payload = await decodeQrFromImage(previewSource);
+                decodedPayload = payload;
+                generatedSiteLink = buildSiteLink(payload);
+
+                decodedText.innerHTML = '<strong>二维码内容：</strong><br>' + escapeHtml(payload);
+                siteLinkText.innerHTML = '<strong>本站链接：</strong><br>' + escapeHtml(generatedSiteLink);
+                btnCopyLink.disabled = false;
+                renderSiteQr(generatedSiteLink);
+            } catch (error) {
+                setError(error.message || '识别失败，请检查图片是否包含二维码。');
+                decodedText.textContent = '未能识别二维码内容。';
+                siteLinkText.textContent = '暂无可生成的本站参数链接。';
+            } finally {
+                btnScan.disabled = false;
+                btnScan.textContent = '识别二维码并生成本站参数';
+            }
+        });
+
+        btnCopyLink.addEventListener('click', async function() {
+            if (!generatedSiteLink) {
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(generatedSiteLink);
+                btnCopyLink.textContent = '已复制本站链接';
+                setTimeout(() => {
+                    btnCopyLink.textContent = '复制本站链接';
+                }, 1400);
+            } catch (error) {
+                setError('复制失败，请手动复制本站链接。');
+            }
+        });
+
+        btnReset.addEventListener('click', clearAll);
+    </script>
+</body>
+</html>

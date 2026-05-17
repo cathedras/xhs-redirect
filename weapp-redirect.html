@@ -40,6 +40,19 @@
             margin: 0 auto 16px;
             font-size: 50px;
             box-shadow: 0 8px 24px rgba(255,36,66,0.3);
+            overflow: hidden;
+        }
+        .main-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        .main-logo.has-image img {
+            display: block;
+        }
+        .main-logo.has-image .logo-fallback {
+            display: none;
         }
         .brand-name {
             font-size: 24px;
@@ -189,7 +202,10 @@
 <body>
     <div class="card">
         <div class="logo-section">
-            <div class="main-logo">📕</div>
+            <div class="main-logo" id="mainLogo">
+                <span class="logo-fallback">📕</span>
+                <img id="customLogo" alt="自定义 logo">
+            </div>
             <div class="brand-name">小红书</div>
             <div class="brand-desc">发现真实、向上、多元的世界</div>
         </div>
@@ -254,9 +270,44 @@
         
         // 目标链接（解析后的真实地址）
         const targetUrl = getParam('param') || 'https://xhslink.com/m/AZybE6hgByh';
+        const CUSTOM_LOGO_STORAGE_KEY = 'xhs-custom-logo';
+
+        function getStoredLogo() {
+            try {
+                return localStorage.getItem(CUSTOM_LOGO_STORAGE_KEY);
+            } catch (error) {
+                return null;
+            }
+        }
+
+        const customLogoUrl = getParam('logo') || getStoredLogo();
         
         // 解析短链获取真实地址（用于二维码）
         let realUrl = targetUrl;
+
+        function setupCustomLogo() {
+            if (!customLogoUrl) {
+                return;
+            }
+
+            const mainLogo = document.getElementById('mainLogo');
+            const customLogo = document.getElementById('customLogo');
+
+            customLogo.onload = function() {
+                mainLogo.classList.add('has-image');
+            };
+
+            customLogo.onerror = function() {
+                mainLogo.classList.remove('has-image');
+                customLogo.removeAttribute('src');
+            };
+
+            customLogo.src = customLogoUrl;
+
+            if (customLogo.complete && customLogo.naturalWidth > 0) {
+                mainLogo.classList.add('has-image');
+            }
+        }
         
         // 如果是短链，先解析
         if (targetUrl.includes('xhslink.com')) {
@@ -336,6 +387,8 @@
         
         // 页面加载
         window.onload = function() {
+            setupCustomLogo();
+
             if (isWechat()) {
                 // 微信内：显示开放标签，隐藏普通按钮
                 document.getElementById('btnOpen').style.display = 'none';

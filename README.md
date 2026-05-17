@@ -42,6 +42,14 @@ curl "http://localhost:3000/api/resolve?url=https://xhslink.com/m/AZybE6hgByh"
 }
 ```
 
+### 上传 Logo
+
+访问 `http://localhost:3000/logo`，上传或填写一张 Logo 图片地址后保存到本站，`/weapp` 页面会自动加载这个 Logo。
+
+### 扫描二维码图片
+
+访问 `http://localhost:3000/scan`，上传一张二维码图片后，页面会识别二维码内容，并自动生成本站可用的 `redirect?param=...` 链接和对应二维码。
+
 ## 部署到生产环境
 
 ### 使用 Vercel 部署（推荐）
@@ -80,6 +88,7 @@ docker run -p 3000:3000 xhs-redirect
 - ✅ 自动唤起小红书 APP（iOS/Android）
 - ✅ 微信内跳转提示
 - ✅ 浏览器中打开选项
+- ✅ 上传二维码图片并生成本站参数链接
 - ✅ RESTful API 接口
 
 ## 文件说明
@@ -89,6 +98,7 @@ docker run -p 3000:3000 xhs-redirect
 | `server.js` | 服务端主程序 |
 | `index.html` | 纯前端版本（无需服务器） |
 | `redirect.html` | 增强版前端页面 |
+| `qr-scan.html` | 二维码上传扫描页 |
 | `package.json` | 项目配置 |
 
 ## 注意事项
