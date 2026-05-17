@@ -265,6 +265,7 @@ app.post('/api/qrcodecont', (req, res) => {
     return res.status(500).json({
       success: false,
       error: '保存二维码数据时发生错误',
+      detail: (error && error.message) ? error.message : String(error),
     });
   }
 });
