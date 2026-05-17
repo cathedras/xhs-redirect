@@ -132,21 +132,34 @@
         .wechat-tips {
             display: none;
             margin-top: 16px;
-            padding: 16px;
-            background: #e8f5e9;
+            padding: 20px;
+            background: #fff3cd;
+            border: 2px solid #ffc107;
             border-radius: 12px;
-            text-align: left;
+            text-align: center;
         }
         .wechat-tips.active { display: block; }
         .wechat-tips h3 {
-            color: #2e7d32;
-            font-size: 16px;
-            margin-bottom: 8px;
+            color: #856404;
+            font-size: 18px;
+            margin-bottom: 12px;
+            font-weight: 600;
         }
         .wechat-tips p {
-            color: #555;
+            color: #856404;
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.8;
+            margin: 8px 0;
+        }
+        .wechat-tips .highlight {
+            background: #ff2442;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            margin: 10px 0;
+            font-weight: 600;
+            font-size: 16px;
         }
         .arrow {
             font-size: 24px;
@@ -179,12 +192,10 @@
         </button>
         
         <div class="wechat-tips" id="wechatTips">
-            <h3>💡 在微信中打开</h3>
-            <p>1. 点击右上角「···」</p>
-            <div class="arrow">↓</div>
-            <p>2. 选择「在浏览器打开」</p>
-            <div class="arrow">↓</div>
-            <p>3. 即可自动跳转小红书</p>
+            <h3>⚠️ 微信内无法直接跳转</h3>
+            <p>请点击右上角</p>
+            <div class="highlight">「···」→「在浏览器打开」</div>
+            <p>即可自动跳转小红书APP</p>
         </div>
         
         <div class="tips" id="normalTips">
@@ -247,41 +258,41 @@
             });
         }
         
-        // 打开 APP - 简化可靠的实现
+        // 打开 APP - 优化微信内体验
         function openApp() {
-            // 显示加载提示
             const btn = document.getElementById('btnOpen');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '⏳ 正在打开...';
-            btn.disabled = true;
             
             if (isWechat()) {
-                // 微信内提示用浏览器打开
+                // 微信内：显示引导提示，并尝试用 scheme 打开
                 document.getElementById('wechatTips').classList.add('active');
                 document.getElementById('normalTips').style.display = 'none';
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                
+                // 尝试直接跳转（部分微信版本支持）
+                setTimeout(() => {
+                    if (isIOS()) {
+                        window.location.href = 'xhsdiscover://';
+                    } else {
+                        window.location.href = 'intent://xiaohongshu.com#Intent;package=com.xingin.xhs;scheme=xhs;end;';
+                    }
+                }, 500);
                 return;
             }
             
+            // 显示加载提示
+            btn.innerHTML = '⏳ 正在打开...';
+            btn.disabled = true;
+            
             // 直接尝试跳转
             if (isIOS()) {
-                // iOS: 直接尝试打开
                 window.location.href = 'xhsdiscover://';
-                
-                // 延迟后如果没有跳转，尝试真实链接
-                setTimeout(() => {
-                    window.location.href = realUrl;
-                }, 2000);
             } else {
-                // Android: 使用 intent 方式
                 window.location.href = 'intent://xiaohongshu.com#Intent;package=com.xingin.xhs;scheme=xhs;end;';
-                
-                // 延迟后如果没有跳转，尝试真实链接
-                setTimeout(() => {
-                    window.location.href = realUrl;
-                }, 2000);
             }
+            
+            // 2秒后如果没有跳转，尝试真实链接
+            setTimeout(() => {
+                window.location.href = realUrl;
+            }, 2000);
         }
         
         // 复制链接
