@@ -18,6 +18,16 @@ const PORT = process.env.PORT || 3000;
 // 静态文件服务
 app.use(express.static(path.join(__dirname, 'public')));
 
+// 二维码生成页面
+app.get('/qr', (req, res) => {
+    res.sendFile(path.join(__dirname, 'qr-generator.html'));
+});
+
+// 微信小程序跳转页面
+app.get('/weapp', (req, res) => {
+    res.sendFile(path.join(__dirname, 'weapp-redirect.html'));
+});
+
 
 
 // 解析小红书短链
