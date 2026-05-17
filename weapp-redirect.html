@@ -184,15 +184,36 @@
             return /iPhone|iPad|iPod/i.test(navigator.userAgent);
         }
         
-        // 目标链接
+        // 目标链接（解析后的真实地址）
         const targetUrl = getParam('param') || 'https://xhslink.com/m/AZybE6hgByh';
-        const redirectUrl = 'https://xhs-redirect.vercel.app/redirect?param=' + encodeURIComponent(targetUrl);
         
-        // 生成二维码
+        // 解析短链获取真实地址（用于二维码）
+        let realUrl = targetUrl;
+        
+        // 如果是短链，先解析
+        if (targetUrl.includes('xhslink.com')) {
+            // 调用解析 API
+            fetch('/api/resolve?url=' + encodeURIComponent(targetUrl))
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.realUrl) {
+                        realUrl = data.realUrl;
+                        generateQR();
+                    }
+                })
+                .catch(() => {
+                    generateQR();
+                });
+        } else {
+            generateQR();
+        }
+        
+        // 生成二维码（使用真实地址）
         function generateQR() {
             const qrDiv = document.getElementById('qrCode');
+            qrDiv.innerHTML = '';
             new QRCode(qrDiv, {
-                text: redirectUrl,
+                text: realUrl,
                 width: 180,
                 height: 180,
                 colorDark: '#000000',
@@ -225,15 +246,13 @@
         
         // 复制链接
         function copyLink() {
-            navigator.clipboard.writeText(redirectUrl).then(() => {
+            navigator.clipboard.writeText(realUrl).then(() => {
                 alert('链接已复制到剪贴板');
             });
         }
         
         // 页面加载
         window.onload = function() {
-            generateQR();
-            
             if (isWechat()) {
                 document.getElementById('wechatTips').classList.add('active');
                 document.getElementById('normalTips').style.display = 'none';

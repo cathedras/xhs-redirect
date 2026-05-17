@@ -188,20 +188,38 @@
             }
         });
         
-        function generateQR() {
+        let currentQRUrl = '';
+        
+        async function generateQR() {
             const url = document.getElementById('urlInput').value;
             if (!url) {
                 alert('请输入跳转链接');
                 return;
             }
             
+            // 如果是短链，先解析获取真实地址
+            let qrContent = url;
+            if (url.includes('xhslink.com')) {
+                try {
+                    const response = await fetch('/api/resolve?url=' + encodeURIComponent(url));
+                    const data = await response.json();
+                    if (data.success && data.realUrl) {
+                        qrContent = data.realUrl;
+                    }
+                } catch (e) {
+                    console.log('解析失败，使用原始链接');
+                }
+            }
+            
+            currentQRUrl = qrContent;
+            
             // 清空之前的二维码
             const qrcodeDiv = document.getElementById('qrcode');
             qrcodeDiv.innerHTML = '';
             
-            // 生成二维码
+            // 生成二维码（使用真实地址）
             const qrcode = new QRCode(qrcodeDiv, {
-                text: url,
+                text: qrContent,
                 width: 256,
                 height: 256,
                 colorDark: '#000000',
