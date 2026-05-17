@@ -247,69 +247,41 @@
             });
         }
         
-        // 打开 APP - 参考薯客宝实现
+        // 打开 APP - 简化可靠的实现
         function openApp() {
+            // 显示加载提示
+            const btn = document.getElementById('btnOpen');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ 正在打开...';
+            btn.disabled = true;
+            
             if (isWechat()) {
                 // 微信内提示用浏览器打开
                 document.getElementById('wechatTips').classList.add('active');
                 document.getElementById('normalTips').style.display = 'none';
+                btn.innerHTML = originalText;
+                btn.disabled = false;
                 return;
             }
             
-            // 记录开始时间，用于检测是否成功打开APP
-            const startTime = Date.now();
-            let hasOpened = false;
-            
-            // 尝试打开小红书 APP - 使用多种 scheme
+            // 直接尝试跳转
             if (isIOS()) {
-                // iOS: 尝试 universal link 和 custom scheme
-                tryOpenApp([
-                    'xhsdiscover://',
-                    'xhs://',
-                    'xiaohongshu://'
-                ]);
+                // iOS: 直接尝试打开
+                window.location.href = 'xhsdiscover://';
+                
+                // 延迟后如果没有跳转，尝试真实链接
+                setTimeout(() => {
+                    window.location.href = realUrl;
+                }, 2000);
             } else {
                 // Android: 使用 intent 方式
                 window.location.href = 'intent://xiaohongshu.com#Intent;package=com.xingin.xhs;scheme=xhs;end;';
-                hasOpened = true;
-            }
-            
-            // 如果APP未安装，跳转到下载页或网页版
-            setTimeout(() => {
-                if (!hasOpened || (Date.now() - startTime < 1500)) {
-                    // 未成功打开APP，跳转到真实链接
-                    window.location.href = realUrl;
-                }
-            }, 1500);
-        }
-        
-        // 尝试多种 scheme 打开APP
-        function tryOpenApp(schemes) {
-            let index = 0;
-            
-            function tryNext() {
-                if (index >= schemes.length) {
-                    // 所有 scheme 都失败，跳转到真实链接
-                    window.location.href = realUrl;
-                    return;
-                }
                 
-                const scheme = schemes[index++];
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = scheme;
-                document.body.appendChild(iframe);
-                
+                // 延迟后如果没有跳转，尝试真实链接
                 setTimeout(() => {
-                    document.body.removeChild(iframe);
-                    // 如果页面还在，说明 scheme 失败，尝试下一个
-                    if (!document.hidden) {
-                        tryNext();
-                    }
-                }, 500);
+                    window.location.href = realUrl;
+                }, 2000);
             }
-            
-            tryNext();
         }
         
         // 复制链接
