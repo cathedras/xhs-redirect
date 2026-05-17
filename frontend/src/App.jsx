@@ -838,6 +838,8 @@ function QrScanPage() {
           <div className="status-box">{previewLabel}</div>
           <div className="status-box">{status}</div>
         </div>
+
+        <canvas ref={canvasRef} className="hidden-canvas" width="1" height="1" aria-hidden="true" />
       </section>
 
       <aside className="side-stack">

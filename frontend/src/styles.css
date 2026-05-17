@@ -514,6 +514,16 @@ input {
   height: auto;
 }
 
+.hidden-canvas {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  left: -9999px;
+  top: -9999px;
+}
+
 .status-box,
 .value-box,
 .tip-box,
