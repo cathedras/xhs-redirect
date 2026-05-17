@@ -1,12 +1,8 @@
 {
-  "buildCommand": "vite build --config frontend/vite.config.js",
+  "buildCommand": "npm run build",
   "outputDirectory": "frontend/dist",
   "nodeVersion": "18",
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
