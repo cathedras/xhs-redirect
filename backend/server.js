@@ -66,14 +66,29 @@ function readQrData() {
 }
 
 function writeQrData(nextData) {
-  const payload = {
-    updatedAt: new Date().toISOString(),
-    items: nextData.items.slice(0, 100),
-  };
+  try {
+    const payload = {
+      updatedAt: new Date().toISOString(),
+      items: Array.isArray(nextData.items) ? nextData.items.slice(0, 100) : [],
+    };
 
-  fs.writeFileSync(qrDataFilePath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+    // Ensure directory exists (defensive) and create file if missing
+    const dir = path.dirname(qrDataFilePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
 
-  return payload;
+    if (!fs.existsSync(qrDataFilePath)) {
+      fs.writeFileSync(qrDataFilePath, JSON.stringify({ updatedAt: null, items: [] }, null, 2) + '\n', 'utf8');
+    }
+
+    fs.writeFileSync(qrDataFilePath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+
+    return payload;
+  } catch (err) {
+    console.error('写入 qrcodecont.json 失败:', err);
+    throw err;
+  }
 }
 
 function getSiteBaseUrl(req) {
@@ -209,16 +224,24 @@ app.post('/api/qrcodecont', (req, res) => {
   };
 
   const remainingItems = current.items.filter((item) => item.content !== content || item.siteLink !== siteLink);
-  const saved = writeQrData({
-    ...current,
-    items: [nextItem, ...remainingItems],
-  });
+  try {
+    const saved = writeQrData({
+      ...current,
+      items: [nextItem, ...remainingItems],
+    });
 
-  return res.json({
-    success: true,
-    item: nextItem,
-    ...saved,
-  });
+    return res.json({
+      success: true,
+      item: nextItem,
+      ...saved,
+    });
+  } catch (error) {
+    console.error('POST /api/qrcodecont 保存失败:', error);
+    return res.status(500).json({
+      success: false,
+      error: '保存二维码数据时发生错误',
+    });
+  }
 });
 
 app.get('/health', (req, res) => {
