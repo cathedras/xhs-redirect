@@ -181,6 +181,21 @@ async function renderQrToCanvas(canvas, text, logoSource) {
   return canvas.toDataURL('image/png');
 }
 
+function FileUploadField({ id, label, fileName, placeholder = '未选择任何文件', onChange }) {
+  return (
+    <div className="field upload-field">
+      <span>{label}</span>
+      <div className="upload-control">
+        <input id={id} className="upload-input" type="file" accept="image/*" onChange={onChange} />
+        <label className="upload-button" htmlFor={id}>
+          选择文件
+        </label>
+        <span className={`upload-filename ${fileName ? '' : 'is-empty'}`}>{fileName || placeholder}</span>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const location = useLocation();
 
@@ -219,6 +234,38 @@ function App() {
 
 function HomePage() {
   usePageTitle('index 快链');
+  const [siteLinks, setSiteLinks] = useState([]);
+  const [siteLinksStatus, setSiteLinksStatus] = useState('正在加载本站可访问的链接地址...');
+
+  useEffect(() => {
+    let active = true;
+
+    fetch('/api/site-links')
+      .then((response) => response.json())
+      .then((data) => {
+        if (!active) {
+          return;
+        }
+
+        if (data.success && Array.isArray(data.links)) {
+          setSiteLinks(data.links);
+          setSiteLinksStatus('');
+        } else {
+          setSiteLinksStatus('暂时无法读取本站链接地址。');
+        }
+      })
+      .catch(() => {
+        if (!active) {
+          return;
+        }
+
+        setSiteLinksStatus('暂时无法读取本站链接地址。');
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <main className="page-grid">
@@ -274,6 +321,32 @@ function HomePage() {
       </section>
 
       <aside className="side-stack">
+        <section className="content-card site-links-card">
+          <div className="section-head">
+            <h2>本站可访问的链接地址</h2>
+            <p>接口会自动返回当前环境下的完整访问地址，便于复制和分享。</p>
+          </div>
+
+          {siteLinksStatus ? <div className="status-box">{siteLinksStatus}</div> : null}
+
+          <div className="site-links-grid">
+            {siteLinks.map((item) => (
+              <article key={item.path} className="site-link-item">
+                <div className="site-link-head">
+                  <div>
+                    <h3>{item.label}</h3>
+                    <p>{item.description}</p>
+                  </div>
+                  <span className="site-link-badge">{item.path}</span>
+                </div>
+                <a href={item.url} target={item.url.startsWith('http') ? '_blank' : '_self'} rel="noreferrer">
+                  {item.url}
+                </a>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="info-card">
           <div className="section-head compact">
             <h2>部署说明</h2>
@@ -439,6 +512,7 @@ function QrGeneratorPage() {
   const [sourceUrl, setSourceUrl] = useState(SAMPLE_URL);
   const [logoSource, setLogoSource] = useState(getStoredLogo());
   const [logoInput, setLogoInput] = useState('');
+  const [logoFileName, setLogoFileName] = useState(getStoredLogo() ? '已读取本站保存的 Logo' : '未选择任何文件');
   const [logoLabel, setLogoLabel] = useState(getStoredLogo() ? '已读取本站保存的 Logo' : '未设置 Logo');
   const [downloadUrl, setDownloadUrl] = useState('');
   const [resultUrl, setResultUrl] = useState('');
@@ -457,6 +531,7 @@ function QrGeneratorPage() {
     reader.onload = (loadEvent) => {
       const dataUrl = String(loadEvent.target?.result || '');
       setLogoInput('');
+      setLogoFileName(`${file.name} · ${Math.round(file.size / 1024)} KB`);
       setLogoSource(dataUrl);
       setLogoPreview(dataUrl);
       setLogoLabel(`${file.name} · ${Math.round(file.size / 1024)} KB`);
@@ -534,10 +609,7 @@ function QrGeneratorPage() {
             <input value={logoInput} onChange={handleLogoInputChange} placeholder="可粘贴 data URL 或图片地址" />
           </label>
 
-          <label className="field upload-field">
-            <span>上传 Logo</span>
-            <input type="file" accept="image/*" onChange={handleFileChange} />
-          </label>
+          <FileUploadField id="qr-logo-upload" label="上传 Logo" fileName={logoFileName} onChange={handleFileChange} />
         </div>
 
         <div className="actions-row">
@@ -583,6 +655,7 @@ function QrScanPage() {
   const canvasRef = useRef(null);
   const [previewSource, setPreviewSource] = useState('');
   const [previewLabel, setPreviewLabel] = useState('尚未选择图片');
+  const [qrFileName, setQrFileName] = useState('未选择任何文件');
   const [decodedPayload, setDecodedPayload] = useState('');
   const [siteLink, setSiteLink] = useState('');
   const [siteQrUrl, setSiteQrUrl] = useState('');
@@ -601,6 +674,7 @@ function QrScanPage() {
     reader.onload = (loadEvent) => {
       const dataUrl = String(loadEvent.target?.result || '');
       setPreviewSource(dataUrl);
+      setQrFileName(`${file.name} · ${Math.round(file.size / 1024)} KB`);
       setPreviewLabel(`${file.name} · ${Math.round(file.size / 1024)} KB`);
       setStatus('图片已加载，点击识别即可。');
       setError('');
@@ -614,6 +688,7 @@ function QrScanPage() {
   function resetAll() {
     setPreviewSource('');
     setPreviewLabel('尚未选择图片');
+    setQrFileName('未选择任何文件');
     setDecodedPayload('');
     setSiteLink('');
     setSiteQrUrl('');
@@ -689,10 +764,26 @@ function QrScanPage() {
         errorCorrectionLevel: 'H',
       });
 
+      try {
+        await fetch('/api/qrcodecont', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: payload,
+            siteLink: generatedLink,
+            sourceName: previewLabel,
+          }),
+        });
+      } catch {
+        // ignore save errors and still show the generated link
+      }
+
       setDecodedPayload(payload);
       setSiteLink(generatedLink);
       setSiteQrUrl(qrDataUrl);
-      setStatus('识别成功，已生成本站参数链接。');
+      setStatus('识别成功，已生成本站参数链接，并尝试保存到 qrcodecont.json。');
     } catch (scanError) {
       setError(scanError instanceof Error ? scanError.message : '识别失败，请检查图片是否包含二维码。');
       setStatus('识别失败。');
@@ -725,10 +816,7 @@ function QrScanPage() {
         </div>
 
         <div className="field-grid">
-          <label className="field upload-field">
-            <span>上传二维码图片</span>
-            <input type="file" accept="image/*" onChange={handleFileChange} />
-          </label>
+          <FileUploadField id="qr-scan-upload" label="上传二维码图片" fileName={qrFileName} onChange={handleFileChange} />
         </div>
 
         <div className="actions-row">
@@ -782,6 +870,7 @@ function LogoUploadPage() {
   usePageTitle('上传 Logo');
 
   const [selectedLogo, setSelectedLogo] = useState(getStoredLogo());
+  const [logoFileName, setLogoFileName] = useState(getStoredLogo() ? '已读取本站保存的 Logo' : '未选择任何文件');
   const [label, setLabel] = useState(getStoredLogo() ? '已恢复本站保存的 Logo' : '尚未选择图片');
   const [urlInput, setUrlInput] = useState('');
   const [status, setStatus] = useState(getStoredLogo() ? '已读取本地保存的 Logo。' : '上传一张图片后点击保存，即可让跳转页复用这个 Logo。');
@@ -797,6 +886,7 @@ function LogoUploadPage() {
     reader.onload = (loadEvent) => {
       const dataUrl = String(loadEvent.target?.result || '');
       setSelectedLogo(dataUrl);
+      setLogoFileName(`${file.name} · ${Math.round(file.size / 1024)} KB`);
       setLabel(`${file.name} · ${Math.round(file.size / 1024)} KB`);
       setStatus('图片已加载，点击保存后会写入本站存储。');
     };
@@ -843,10 +933,7 @@ function LogoUploadPage() {
         </div>
 
         <div className="field-grid">
-          <label className="field upload-field">
-            <span>本地图片</span>
-            <input type="file" accept="image/*" onChange={handleFileChange} />
-          </label>
+          <FileUploadField id="logo-upload" label="本地图片" fileName={logoFileName} onChange={handleFileChange} />
 
           <label className="field">
             <span>图片地址</span>
@@ -916,11 +1003,10 @@ function WeappRedirectPage() {
       }
 
       setResolvedUrl(url);
-      void QRCode.toDataURL(url, {
-        width: 240,
-        margin: 1,
-        errorCorrectionLevel: 'H',
-      }).then((dataUrl) => {
+
+      const canvas = document.createElement('canvas');
+
+      void renderQrToCanvas(canvas, url, logoParam).then((dataUrl) => {
         if (active) {
           setQrDataUrl(dataUrl);
         }
@@ -930,7 +1016,7 @@ function WeappRedirectPage() {
     return () => {
       active = false;
     };
-  }, [targetParam]);
+  }, [targetParam, logoParam]);
 
   const displayUrl = resolvedUrl || targetParam;
 
