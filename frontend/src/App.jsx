@@ -236,22 +236,33 @@ function HomePage() {
   usePageTitle('index 快链');
   const [siteLinks, setSiteLinks] = useState([]);
   const [siteLinksStatus, setSiteLinksStatus] = useState('正在加载本站可访问的链接地址...');
+  const [scanHistory, setScanHistory] = useState([]);
+  const [scanHistoryStatus, setScanHistoryStatus] = useState('正在加载历史扫码链接...');
 
   useEffect(() => {
     let active = true;
 
-    fetch('/api/site-links')
-      .then((response) => response.json())
-      .then((data) => {
+    Promise.all([
+      fetch('/api/site-links').then((response) => response.json()),
+      fetch('/api/qrcodecont').then((response) => response.json()),
+    ])
+      .then(([siteLinksData, scanHistoryData]) => {
         if (!active) {
           return;
         }
 
-        if (data.success && Array.isArray(data.links)) {
-          setSiteLinks(data.links);
+        if (siteLinksData.success && Array.isArray(siteLinksData.links)) {
+          setSiteLinks(siteLinksData.links);
           setSiteLinksStatus('');
         } else {
           setSiteLinksStatus('暂时无法读取本站链接地址。');
+        }
+
+        if (scanHistoryData.success && Array.isArray(scanHistoryData.items)) {
+          setScanHistory(scanHistoryData.items);
+          setScanHistoryStatus('');
+        } else {
+          setScanHistoryStatus('暂时没有历史扫码记录。');
         }
       })
       .catch(() => {
@@ -260,12 +271,33 @@ function HomePage() {
         }
 
         setSiteLinksStatus('暂时无法读取本站链接地址。');
+        setScanHistoryStatus('暂时无法读取历史扫码记录。');
       });
 
     return () => {
       active = false;
     };
   }, []);
+
+  function formatTimestamp(value) {
+    if (!value) {
+      return '未知时间';
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return '未知时间';
+    }
+
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
 
   return (
     <main className="page-grid">
@@ -317,6 +349,33 @@ function HomePage() {
               </Link>
             );
           })}
+        </div>
+      </section>
+
+      <section className="content-card scan-history-card">
+        <div className="section-head">
+          <h2>历史扫码链接</h2>
+          <p>这里会显示最近通过二维码扫描生成过的地址链接，点击即可直接打开。</p>
+        </div>
+
+        {scanHistoryStatus ? <div className="status-box">{scanHistoryStatus}</div> : null}
+
+        <div className="history-list">
+          {scanHistory.map((item) => (
+            <article key={`${item.siteLink}-${item.createdAt}`} className="history-item">
+              <div className="history-item-head">
+                <div>
+                  <h3>{item.sourceName || '扫描记录'}</h3>
+                  <p>{item.content}</p>
+                </div>
+                <span className="history-item-badge">{formatTimestamp(item.createdAt)}</span>
+              </div>
+
+              <a className="history-item-link" href={item.siteLink} target="_blank" rel="noreferrer">
+                {item.siteLink}
+              </a>
+            </article>
+          ))}
         </div>
       </section>
 
